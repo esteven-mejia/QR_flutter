@@ -19,28 +19,88 @@ class QRScanApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF39A900)),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: const SplashScreen(),
     );
   }
 }
 
+/// Pantalla de splash que inicializa el servicio
+class SplashScreen extends StatelessWidget {
+  const SplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<QRService>(
+      future: _inicializarServicio(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasData) {
+            return HomeScreen(service: snapshot.data!);
+          } else if (snapshot.hasError) {
+            return Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Error al inicializar la aplicación'),
+                    const SizedBox(height: 8),
+                    Text(snapshot.error.toString()),
+                  ],
+                ),
+              ),
+            );
+          }
+        }
+        // Mientras se está inicializando
+        return Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation(Color(0xFF39A900)),
+                ),
+                const SizedBox(height: 16),
+                const Text('Inicializando aplicación...'),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Inicializa el servicio QR
+  Future<QRService> _inicializarServicio() async {
+    final service = QRService();
+    await service.inicializar();
+    return service;
+  }
+}
+
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final QRService service;
+
+  const HomeScreen({super.key, required this.service});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Una sola instancia del servicio compartida entre pantallas
-  final QRService _service = QRService();
   int _paginaActual = 0;
 
   @override
   Widget build(BuildContext context) {
     final paginas = [
-      ScannerScreen(service: _service),
-      HistorialScreen(service: _service),
+      ScannerScreen(service: widget.service),
+      HistorialScreen(service: widget.service),
     ];
 
     return Scaffold(
