@@ -23,11 +23,14 @@ class ResultScreen extends StatelessWidget {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Copiado al portapapeles'),
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Contenido copiado'),
+            ],
+          ),
           duration: const Duration(seconds: 2),
-          backgroundColor: const Color(0xFF39A900),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
         ),
       );
     }
@@ -66,9 +69,12 @@ class ResultScreen extends StatelessWidget {
               Navigator.pop(context);
               await _abrirEnWebView(context);
             },
-            child: const Text(
+            child: Text(
               'Abrir en app',
-              style: TextStyle(color: Color(0xFF39A900)),
+              style: TextStyle(
+                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           ElevatedButton.icon(
@@ -78,10 +84,6 @@ class ResultScreen extends StatelessWidget {
             },
             icon: const Icon(Icons.open_in_new),
             label: const Text('Navegador'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF39A900),
-              foregroundColor: Colors.white,
-            ),
           ),
         ],
       ),
@@ -116,9 +118,21 @@ class ResultScreen extends StatelessWidget {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Abriendo navegador...'),
-          duration: Duration(seconds: 1),
-          backgroundColor: Color(0xFF39A900),
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(Colors.white),
+                ),
+              ),
+              SizedBox(width: 12),
+              Text('Abriendo navegador...'),
+            ],
+          ),
+          duration: Duration(seconds: 3),
         ),
       );
     }
@@ -141,12 +155,18 @@ class ResultScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Error'),
+        title: const Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red),
+            SizedBox(width: 12),
+            Text('Error'),
+          ],
+        ),
         content: Text(
           'No se pudo abrir el enlace:\n\n$url\n\nVerifica que la URL es válida.',
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Entendido'),
           ),
@@ -185,208 +205,243 @@ class ResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).primaryColor;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Resultado del Escaneo'),
-        backgroundColor: const Color(0xFF39A900),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pop(context);
+            onVolver();
+          },
         ),
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Tarjeta principal con información del QR
-              Card(
-                elevation: 8,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Tipo de QR
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF39A900).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              _obtenerIconoTipo(),
-                              color: const Color(0xFF39A900),
-                              size: 28,
-                            ),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Tarjeta principal con información del QR
+            Card(
+              elevation: 0,
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Tipo de QR con icono
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Tipo de código',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: Colors.grey[600],
-                                      ),
-                                ),
-                                Text(
-                                  _obtenerEtiqueta(),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                              ],
-                            ),
+                          child: Icon(
+                            _obtenerIconoTipo(),
+                            color: primaryColor,
+                            size: 32,
                           ),
-                        ],
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Tipo de código',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                      color: isDark
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _obtenerEtiqueta(),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Divider(
+                      color: isDark
+                          ? Colors.grey[700]
+                          : Colors.grey[200],
+                    ),
+                    const SizedBox(height: 24),
+                    // Contenido del QR
+                    Text(
+                      'Contenido',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: isDark
+                                ? Colors.grey[400]
+                                : Colors.grey[600],
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.grey[800]
+                            : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.grey[700]!
+                              : Colors.grey[200]!,
+                        ),
                       ),
-                      const SizedBox(height: 20),
-                      Divider(color: Colors.grey[300]),
-                      const SizedBox(height: 20),
-                      // Contenido del QR
-                      Text(
-                        'Contenido',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      SelectableText(
+                      child: SelectableText(
                         escaneo.contenido,
-                        style:
-                            Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  fontSize: 16,
-                                  height: 1.5,
-                                ),
-                      ),
-                      const SizedBox(height: 20),
-                      Divider(color: Colors.grey[300]),
-                      const SizedBox(height: 20),
-                      // Fecha y hora
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.access_time,
-                            color: Colors.grey[600],
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Escaneado',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: Colors.grey[600],
-                                      ),
-                                ),
-                                Text(
-                                  _formatearFecha(escaneo.fechaHora),
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ],
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(
+                              fontSize: 15,
+                              height: 1.6,
+                              fontFamily: 'monospace',
                             ),
-                          ),
-                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 24),
+                    Divider(
+                      color: isDark
+                          ? Colors.grey[700]
+                          : Colors.grey[200],
+                    ),
+                    const SizedBox(height: 24),
+                    // Fecha y hora
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          color: isDark
+                              ? Colors.grey[400]
+                              : Colors.grey[600],
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Escaneado',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                      color: isDark
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _formatearFecha(escaneo.fechaHora),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 32),
-              // Botones de acción
-              Row(
+            ),
+            const SizedBox(height: 32),
+            // Botones de acción
+            SizedBox(
+              width: double.infinity,
+              child: Column(
                 children: [
-                  // Botón Copiar
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _copiarAlPortapapeles(context),
-                      icon: const Icon(Icons.copy),
-                      label: const Text('Copiar'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[300],
-                        foregroundColor: Colors.black87,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                  // Botón principal de acción
+                  ElevatedButton.icon(
+                    onPressed: () => _aceptarYVolver(context),
+                    icon: Icon(
+                      escaneo.tipo == TipoQR.url
+                          ? Icons.open_in_new
+                          : Icons.check_circle,
+                    ),
+                    label: Text(
+                      escaneo.tipo == TipoQR.url ? 'Abrir enlace' : 'Aceptar',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  // Botón Aceptar (cambia según el tipo de QR)
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _aceptarYVolver(context),
-                      icon: Icon(
-                        escaneo.tipo == TipoQR.url
-                            ? Icons.open_in_new
-                            : Icons.check_circle,
+                  const SizedBox(height: 12),
+                  // Botón Copiar
+                  OutlinedButton.icon(
+                    onPressed: () => _copiarAlPortapapeles(context),
+                    icon: const Icon(Icons.copy),
+                    label: const Text(
+                      'Copiar contenido',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
-                      label: Text(
-                        escaneo.tipo == TipoQR.url ? 'Abrir' : 'Aceptar',
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF39A900),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Botón Volver
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      onVolver();
+                    },
+                    child: Text(
+                      'Escanear otro código',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? Colors.grey[400]
+                            : Colors.grey[600],
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              // Botón Volver (alternativa)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onVolver();
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: const BorderSide(
-                      color: Color(0xFF39A900),
-                      width: 2,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Volver',
-                    style: TextStyle(
-                      color: Color(0xFF39A900),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

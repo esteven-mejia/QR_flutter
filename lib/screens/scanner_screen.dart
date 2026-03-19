@@ -16,6 +16,7 @@ class _ScannerScreenState extends State<ScannerScreen>
     with WidgetsBindingObserver {
   late MobileScannerController _controlador;
   bool _escaneandoActivo = true;
+  bool _linternaPrendida = false;
 
   @override
   void initState() {
@@ -86,6 +87,14 @@ class _ScannerScreenState extends State<ScannerScreen>
     }
   }
 
+  /// Cambia el estado de la linterna
+  void _toggleLinterna() {
+    setState(() {
+      _linternaPrendida = !_linternaPrendida;
+      _controlador.toggleTorch();
+    });
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -95,12 +104,9 @@ class _ScannerScreenState extends State<ScannerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Escáner QR'),
-        backgroundColor: const Color(0xFF39A900),
-        elevation: 0,
-      ),
       body: Stack(
         children: [
           // Área del escáner
@@ -109,48 +115,64 @@ class _ScannerScreenState extends State<ScannerScreen>
               controller: _controlador,
               onDetect: _alDetectar,
               errorBuilder: (context, error, child) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: Colors.red,
-                        size: 48,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Error al acceder a la cámara',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge
-                            ?.copyWith(color: Colors.red),
-                      ),
-                    ],
+                return Container(
+                  color: isDark ? const Color(0xFF111827) : Colors.white,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 64,
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Error al acceder a la cámara',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(color: Colors.red),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Verifica los permisos de cámara en la configuración',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
             )
           else
             Container(
-              color: Colors.black87,
-              child: const Center(
+              color: isDark ? const Color(0xFF111827) : Colors.white,
+              child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.hourglass_bottom,
-                      color: Color(0xFF39A900),
-                      size: 48,
+                    SizedBox(
+                      height: 80,
+                      width: 80,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation(
+                            Theme.of(context).primaryColor,
+                          ),
+                          strokeWidth: 3,
+                        ),
+                      ),
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     Text(
                       'Procesando escaneo...',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -159,27 +181,68 @@ class _ScannerScreenState extends State<ScannerScreen>
           // Overlay con instrucciones
           if (_escaneandoActivo)
             Positioned(
-              bottom: 40,
-              left: 0,
-              right: 0,
-              child: Center(
+              top: 16,
+              left: 16,
+              right: 16,
+              child: SafeArea(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
+                    horizontal: 16,
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.black54,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    'Apunta el código QR hacia la cámara',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Posiciona el código QR frente a la cámara',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          // Botones de control
+          if (_escaneandoActivo)
+            Positioned(
+              bottom: 32,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FloatingActionButton(
+                        onPressed: _toggleLinterna,
+                        mini: true,
+                        backgroundColor: _linternaPrendida
+                            ? Colors.amber.withValues(alpha: 0.9)
+                            : Colors.black54,
+                        tooltip: _linternaPrendida ? 'Apagar linterna' : 'Encender linterna',
+                        child: Icon(
+                          _linternaPrendida ? Icons.flashlight_on : Icons.flashlight_off,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
